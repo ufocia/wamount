@@ -20,8 +20,11 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Setup MSBuild
-      uses: microsoft/setup-msbuild@v2
+    - name: Setup Clang
+      uses: egor-tensin/setup-clang@v2
+      with:
+        version: latest
+        platform: x64
 
     - name: Install WinFsp
       shell: pwsh
@@ -101,7 +104,7 @@ jobs:
         Write-Host "Configuring with WinFsp path: $env:WINFSP_PATH"
         mkdir build
         cd build
-        cmake -G "Visual Studio 17 2022" -A x64 -DWINFSP_PATH="$env:WINFSP_PATH" ..
+        cmake -A x64 -DWINFSP_PATH="$env:WINFSP_PATH" ..
 
     - name: Build
       run: |
