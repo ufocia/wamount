@@ -9,6 +9,12 @@ struct prange_t {
     uint64_t pr_block_count;                    // Number of blocks
 } __attribute__((packed));
 
+// Node location
+struct nloc_t {
+    uint16_t off;                               // Offset
+    uint16_t len;                               // Length
+} __attribute__((packed));
+
 // NX Superblock (Container Superblock)
 struct nx_superblock_t {
     obj_phys_t nx_o;
@@ -102,12 +108,6 @@ struct btree_node_phys_t {
     nloc_t btn_key_free_list;                   // Key free list location
     nloc_t btn_val_free_list;                   // Value free list location
     uint64_t btn_data[];                        // Variable length data
-} __attribute__((packed));
-
-// Node location
-struct nloc_t {
-    uint16_t off;                               // Offset
-    uint16_t len;                               // Length
 } __attribute__((packed));
 
 // B-tree info
