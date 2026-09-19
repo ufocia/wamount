@@ -3,6 +3,12 @@
 
 #include "apfs_types.h"
 
+// Physical range
+struct prange_t {
+    paddr_t pr_start_paddr;                     // Start physical address
+    uint64_t pr_block_count;                    // Number of blocks
+} __attribute__((packed));
+
 // NX Superblock (Container Superblock)
 struct nx_superblock_t {
     obj_phys_t nx_o;
@@ -56,12 +62,6 @@ struct nx_superblock_t {
     uint64_t nx_newest_mounted_version;         // Newest mounted version
 
     prange_t nx_mkb_locker;                     // Media key bag locker
-} __attribute__((packed));
-
-// Physical range
-struct prange_t {
-    paddr_t pr_start_paddr;                     // Start physical address
-    uint64_t pr_block_count;                    // Number of blocks
 } __attribute__((packed));
 
 // Object Map (OMAP)
