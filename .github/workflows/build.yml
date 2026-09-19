@@ -9,7 +9,7 @@ on:
 
 jobs:
   build-windows:
-    name: Build on Windows
+    name: Build on Windows (GCC / MinGW-w64)
     runs-on: windows-latest
 
     strategy:
@@ -20,11 +20,15 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Setup Clang
-      uses: egor-tensin/setup-clang@v2
+    - name: Setup MSYS2 (MinGW-w64 GCC)
+      uses: msys2/setup-msys2@v2
       with:
-        version: latest
-        platform: x64
+        msystem: MINGW64
+        update: true
+        install: >-
+          mingw-w64-x86_64-gcc
+          mingw-w64-x86_64-cmake
+          mingw-w64-x86_64-ninja
 
     - name: Install WinFsp
       shell: pwsh
@@ -98,24 +102,30 @@ jobs:
         echo "WINFSP_PATH=$winfspPath" >> $env:GITHUB_ENV
         Write-Host "`n✅ WinFsp installed successfully at: $winfspPath"
 
-    - name: Configure CMake
-      shell: pwsh
+    - name: Configure CMake (GCC)
+      shell: msys2 {0}
       run: |
-        Write-Host "Configuring with WinFsp path: $env:WINFSP_PATH"
-        mkdir build
-        cd build
-        cmake -A x64 -DWINFSP_PATH="$env:WINFSP_PATH" ..
+        # Convert the Windows path to C:/Program Files (x86)/WinFsp form for CMake
+        WINFSP_DIR="$(cygpath -m "$WINFSP_PATH")"
+        echo "Configuring with WinFsp path: $WINFSP_DIR"
+        gcc --version
+        cmake -S . -B build -G Ninja \
+          -DCMAKE_BUILD_TYPE=${{ matrix.config }} \
+          -DCMAKE_C_COMPILER=gcc \
+          -DCMAKE_CXX_COMPILER=g++ \
+          -DCMAKE_EXE_LINKER_FLAGS="-static-libgcc -static-libstdc++" \
+          -DWINFSP_PATH="$WINFSP_DIR"
 
     - name: Build
+      shell: msys2 {0}
       run: |
-        cd build
-        cmake --build . --config ${{ matrix.config }} --verbose
+        cmake --build build --verbose
 
     - name: List build output
       shell: pwsh
       run: |
         Write-Host "Build output files:"
-        Get-ChildItem -Path build\${{ matrix.config }} -Recurse
+        Get-ChildItem -Path build -Recurse -Include *.exe,*.dll,*.a
 
     - name: Upload artifacts (Release only)
       if: matrix.config == 'Release'
@@ -123,7 +133,7 @@ jobs:
       with:
         name: wamount-windows-x64
         path: |
-          build/Release/wamount.exe
+          build/wamount.exe
           README.md
           QUICKSTART.md
           LICENSE
@@ -135,8 +145,7 @@ jobs:
       with:
         name: wamount-windows-x64-debug
         path: |
-          build/Debug/wamount.exe
-          build/Debug/wamount.pdb
+          build/wamount.exe
         retention-days: 7
 
   build-info:
