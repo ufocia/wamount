@@ -1,6 +1,7 @@
 #ifndef APFS_STRUCTURES_H
 #define APFS_STRUCTURES_H
 
+#include "stdint.h"
 #include "apfs_types.h"
 
 // Physical range
